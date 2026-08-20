@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NeonLyrics Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #050505; color: #fff; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 40px 20px; }
+        .admin-card { background: rgba(20,20,25,0.8); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 40px; width: 100%; max-width: 600px; }
+        h1 { font-size: 2rem; margin-bottom: 20px; color: #00ffff; text-align: center; }
+        .form-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; font-weight: 600; color: #aaa; }
+        input, textarea, select { width: 100%; padding: 15px; background: #111; border: 1px solid #333; border-radius: 10px; color: #fff; font-family: inherit; font-size: 1rem; }
+        input:focus, textarea:focus { border-color: #00ffff; outline: none; }
+        textarea { height: 180px; resize: vertical; }
+        
+        .btn-container { display: flex; gap: 10px; margin-top: 10px; }
+        button.save-btn { flex: 2; background: #00ffff; color: #000; border: none; padding: 15px; font-weight: 800; border-radius: 10px; cursor: pointer; font-size: 1.1rem; transition: 0.2s; }
+        button.save-btn:hover { background: #fff; }
+        
+        button.delete-btn { flex: 1; background: #ff0055; color: #fff; border: none; padding: 15px; font-weight: 800; border-radius: 10px; cursor: pointer; font-size: 1rem; transition: 0.2s; display: none; }
+        button.delete-btn:hover { background: #ff3377; }
+
+        .alert { background: rgba(0,255,128,0.2); color: #00ff80; padding: 15px; border-radius: 10px; text-align: center; margin-bottom: 20px; font-weight: 600; }
+        .info { font-size: 0.8rem; color: #777; margin-top: 5px; display: block; }
+        .nav-link { display: block; text-align: center; margin-top: 20px; color: #888; text-decoration: none; font-weight: 600; }
+        .nav-link:hover { color: #fff; }
+    </style>
+</head>
+<body>
+    <div class="admin-card">
+        <h1>Stúdió Vezérlő</h1>
+        <div id="status-msg"></div>
+
+        <div class="form-group">
+            <label>Módosításhoz vagy törléshez válassz:</label>
+            <select id="edit-select"><option value="">+ Új dal rögzítése</option></select>
+        </div>
+
+        <form id="song-form" action="/api/upload" method="POST">
+            <input type="hidden" id="song-id" name="songId" value="">
+            
+            <div class="form-group">
+                <label>Dal Címe</label>
+                <input type="text" id="title" name="title" required placeholder="Pl. PRNSTR">
+            </div>
+            
+            <div class="form-group">
+                <label>Előadó</label>
+                <input type="text" id="artist" name="artist" required placeholder="Pl. KKevin">
+            </div>
+            
+            <div class="form-group">
+                <label>YouTube Link (URL)</label>
+                <input type="text" id="youtubeUrl" name="youtubeUrl" required placeholder="https://www.youtube.com/watch?v=...">
+                <span class="info">Másold be a dal YouTube videó linkjét.</span>
+            </div>
+
+            <div class="form-group">
+                <label>Szöveg (LRC Időbélyeggel vagy Sima Szöveg)</label>
+                <textarea id="lyrics" name="lyrics" placeholder="[00:15.00] Időzített szöveg VAGY sima dalszöveg ami lassan lefelé görög..."></textarea>
+                <span class="info">Ha sima szöveget adsz meg, a kivetítő automatikusan lassan lefelé görgeti!</span>
+            </div>
+
+            <div class="btn-container">
+                <button type="submit" class="save-btn" id="submit-btn">Mentés a rendszerbe</button>
+                <button type="button" class="delete-btn" id="delete-btn" onclick="deleteSong()">Dal Törlése</button>
+            </div>
+        </form>
+        <a href="/" class="nav-link">Vissza a Kivetítőhöz</a>
+    </div>
+
+    <script>
+        let allSongs = [];
+        async function load() {
+            const res = await fetch('/api/songs');
+            allSongs = await res.json();
+            const select = document.getElementById('edit-select');
+            select.innerHTML = '<option value="">+ Új dal rögzítése</option>';
+            allSongs.forEach(song => {
+                const opt = document.createElement('option');
+                opt.value = song.id; 
+                opt.textContent = `${song.artist} - ${song.title}`;
+                select.appendChild(opt);
+            });
+        }
+
+        document.getElementById('edit-select').addEventListener('change', (e) => {
+            const id = e.target.value;
+            const deleteBtn = document.getElementById('delete-btn');
+            if(!id) {
+                document.getElementById('song-form').reset();
+                document.getElementById('song-id').value = '';
+                document.getElementById('submit-btn').textContent = 'Mentés a rendszerbe';
+                deleteBtn.style.display = 'none';
+            } else {
+                const s = allSongs.find(x => x.id === id);
+                document.getElementById('song-id').value = s.id;
+                document.getElementById('title').value = s.title;
+                document.getElementById('artist').value = s.artist;
+                document.getElementById('youtubeUrl').value = 'https://youtube.com/watch?v=' + s.youtubeId;
+                document.getElementById('lyrics').value = s.lyrics;
+                document.getElementById('submit-btn').textContent = 'Módosítás Mentése';
+                deleteBtn.style.display = 'block';
+            }
+        });
+
+        async function deleteSong() {
+            const id = document.getElementById('song-id').value;
+            if(!id) return;
+            if(confirm('Biztosan törölni akarod ezt a dalt?')) {
+                const res = await fetch('/api/delete', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ songId: id })
+                });
+                if(res.ok) {
+                    window.location.href = '/admin.html?status=success';
+                }
+            }
+        }
+
+        if(new URLSearchParams(window.location.search).get('status') === 'success') {
+            document.getElementById('status-msg').innerHTML = '<div class="alert">✅ Sikeres művelet!</div>';
+        }
+        load();
+    </script>
+</body>
+</html>

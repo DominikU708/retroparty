@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Party Kívánságműsor</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #08080c; color: #fff; padding: 20px; }
+        h1 { font-size: 1.6rem; color: #00ffff; text-align: center; margin-bottom: 5px; }
+        p.sub { text-align: center; color: #888; font-size: 0.85rem; margin-bottom: 25px; }
+        
+        .card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 20px; padding: 20px; margin-bottom: 20px; }
+        input, select { width: 100%; padding: 14px; background: #121218; border: 1px solid #333; border-radius: 10px; color: #fff; font-family: inherit; font-size: 1rem; margin-bottom: 15px; outline: none; }
+        input:focus { border-color: #00ffff; }
+        
+        .btn { width: 100%; background: #00ffff; color: #000; border: none; padding: 15px; font-weight: 800; border-radius: 10px; cursor: pointer; font-size: 1.1rem; }
+        .btn:active { transform: scale(0.98); }
+
+        .emoji-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; text-align: center; }
+        .emoji-btn { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; font-size: 1.8rem; padding: 15px 0; cursor: pointer; transition: 0.2s; }
+        .emoji-btn:active { background: #00ffff; transform: scale(1.2); }
+        
+        .success-banner { background: rgba(0,255,128,0.2); color: #00ff80; padding: 12px; border-radius: 10px; text-align: center; font-weight: 700; margin-bottom: 15px; display: none; }
+
+        .vote-panel { position: fixed; bottom: 0; left: 0; width: 100%; background: rgba(15,15,22,0.95); backdrop-filter: blur(20px); border-top: 1px solid rgba(255,255,255,0.1); padding: 20px; border-radius: 25px 25px 0 0; display: none; z-index: 100; text-align: center; box-shadow: 0 -10px 30px rgba(0,0,0,0.8); }
+        .vote-panel.open { display: block; }
+        .vote-btns { display: flex; gap: 15px; margin-top: 15px; }
+        .v-btn { flex: 1; padding: 15px; border-radius: 15px; border: none; font-weight: 800; font-size: 1rem; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>Party Kívánságműsor 🎤</h1>
+    <p class="sub">Küldj be dalokat és reagálj élőben a falra!</p>
+
+    <div id="toast" class="success-banner">Sikeresen beküldve a várólistára!</div>
+
+    <div class="card">
+        <h3 style="margin-bottom: 15px; font-size: 1.1rem;">Dal kérése</h3>
+        <input type="text" id="requester-name" placeholder="A neved (pl. Tomi)">
+        <select id="song-select"></select>
+        <button class="btn" onclick="requestSong()">Beküldés a Várólistára</button>
+    </div>
+
+    <div class="card">
+        <h3 style="margin-bottom: 15px; font-size: 1.1rem;">Élő Reakció a Falra 🎉</h3>
+        <div class="emoji-grid">
+            <button class="emoji-btn" onclick="sendEmoji('🔥')">🔥</button>
+            <button class="emoji-btn" onclick="sendEmoji('❤️')">❤️</button>
+            <button class="emoji-btn" onclick="sendEmoji('🍻')">🍻</button>
+            <button class="emoji-btn" onclick="sendEmoji('👏')">👏</button>
+            <button class="emoji-btn" onclick="sendEmoji('💯')">💯</button>
+        </div>
+    </div>
+
+    <div class="vote-panel" id="mobile-vote-panel">
+        <h3 style="color:#00ffff;">Vége a dalnak! Hogy tetszett?</h3>
+        <div class="vote-btns">
+            <button class="v-btn" style="background:#00ffff; color:#000;" onclick="voteMobile('good')">🔥 Zseniális</button>
+            <button class="v-btn" style="background:#ff0055; color:#fff;" onclick="voteMobile('bad')">💀 Gyenge volt</button>
+        </div>
+        <p id="mobile-vote-timer" style="margin-top: 12px; color: #888; font-size: 0.8rem;"></p>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+        let allSongs = [];
+        let mobileVoteTimeout = null;
+
+        async function loadSongs() {
+            try {
+                const res = await fetch('/api/songs');
+                allSongs = await res.json();
+                const select = document.getElementById('song-select');
+                select.innerHTML = '';
+                allSongs.forEach(s => {
+                    const opt = document.createElement('option');
+                    opt.value = s.id;
+                    opt.textContent = `${s.artist} - ${s.title}`;
+                    select.appendChild(opt);
+                });
+            } catch(e) { console.error(e); }
+        }
+
+        function requestSong() {
+            const id = document.getElementById('song-select').value;
+            const name = document.getElementById('requester-name').value.trim() || 'Vendég';
+            const song = allSongs.find(s => s.id === id);
+            if(song) {
+                socket.emit('request-song', { ...song, requester: name });
+                const t = document.getElementById('toast');
+                t.style.display = 'block';
+                setTimeout(() => t.style.display = 'none', 3000);
+            }
+        }
+
+        function sendEmoji(emoji) {
+            socket.emit('send-emoji', emoji);
+        }
+
+        socket.on('show-final-results', () => {
+            const panel = document.getElementById('mobile-vote-panel');
+            panel.classList.add('open');
+            
+            let timeLeft = 30;
+            clearInterval(mobileVoteTimeout);
+            
+            mobileVoteTimeout = setInterval(() => {
+                document.getElementById('mobile-vote-timer').textContent = `Eltűnik: ${timeLeft} mp múlva`;
+                
+                if (timeLeft <= 0) {
+                    clearInterval(mobileVoteTimeout);
+                    panel.classList.remove('open');
+                }
+                timeLeft--;
+            }, 1000);
+        });
+
+        function voteMobile(type) {
+            socket.emit('send-vote', type);
+            clearInterval(mobileVoteTimeout);
+            document.getElementById('mobile-vote-panel').classList.remove('open');
+            alert('Köszönjük a szavazatot!');
+        }
+
+        loadSongs();
+    </script>
+</body>
+</html>
