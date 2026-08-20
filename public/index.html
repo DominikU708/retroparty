@@ -96,41 +96,12 @@
         .xfactor-option.winner { border-color: #00ff80; background: rgba(0,255,128,0.1); box-shadow: 0 0 30px rgba(0,255,128,0.3); }
         .xfactor-option h3 { font-size: 3rem; margin-bottom: 10px; }
         .xfactor-option .count { font-size: 2.5rem; font-weight: 800; color: #fff; }
-
-        /* ÉLŐ ÜZENETFAL STÍLUS A KIVETÍTŐN */
-#message-ticker {
-    position: fixed;
-    bottom: 110px;
-    left: 50%;
-    transform: translateX(-50%) translateY(100px);
-    background: rgba(0, 255, 255, 0.15);
-    backdrop-filter: blur(15px);
-    border: 1px solid var(--accent);
-    border-radius: 30px;
-    padding: 12px 30px;
-    color: #fff;
-    font-size: 1.2rem;
-    font-weight: 700;
-    z-index: 150;
-    box-shadow: 0 0 30px rgba(0,255,255,0.4);
-    transition: transform 0.4s ease;
-    pointer-events: none;
-    text-align: center;
-    max-width: 80vw;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-#message-ticker.show {
-    transform: translateX(-50%) translateY(0);
-}
     </style>
 </head>
 <body>
 
     <div id="yt-bg-container"><div id="youtube-player"></div></div>
     <div id="emoji-layer"></div>
-    <div id="message-ticker"></div>
     <div id="queue-toast">Új dal a várólistán!</div>
 
     <div class="header-bar">
@@ -532,18 +503,6 @@
             clearTimeout(idleTimer);
             idleTimer = setTimeout(() => document.body.classList.add('idle'), 3000);
         });
-
-// Figyeljük a telefonról érkező üzeneteket
-socket.on('show-message', (msg) => {
-    const ticker = document.getElementById('message-ticker');
-    ticker.textContent = `💬 Üzenet a tömegből: "${msg}"`;
-    ticker.classList.add('show');
-    
-    // 6 másodperc múlva eltűnik az üzenet
-    setTimeout(() => {
-        ticker.classList.remove('show');
-    }, 6000);
-});
         
     </script>
 </body>
