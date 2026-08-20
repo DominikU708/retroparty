@@ -50,7 +50,7 @@ app.get('/api/songs', (req, res) => {
     }
 });
 
-// ÚJ: API végpont az éppen játszott zenéhez (Discord RPC-hez vagy külső lekérdezéshez)
+// API végpont az éppen játszott zenéhez (Discord RPC-hez vagy külső lekérdezéshez)
 app.get('/api/current-song', (req, res) => {
     res.json(currentPlayingSong);
 });
@@ -151,6 +151,16 @@ io.on('connection', (socket) => {
 
     socket.on('close-voting', (finalResults) => {
         io.emit('show-final-results', finalResults);
+    });
+
+    // ÚJ: Üzenetek továbbítása a kivetítőre[cite: 1]
+    socket.on('send-message', (msg) => {
+        io.emit('show-message', msg);
+    });
+
+    // ÚJ: Hangeffektek triggerezése[cite: 1]
+    socket.on('play-sound', (soundType) => {
+        io.emit('trigger-sound', soundType);
     });
 });
 
