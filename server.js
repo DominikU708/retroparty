@@ -164,6 +164,10 @@ io.on('connection', (socket) => {
     });
 });
 
+// Add ezt be az io.on('connection', (socket) => { ... }) blokkba:
+socket.on('admin-start-voting', () => {
+    io.emit('enable-voting'); // Szól minden vendégnek, hogy bekapcsolhatja a szavazást
+});
 server.listen(PORT, '0.0.0.0', () => {
     console.log('================================================');
     console.log(`🚀 RENDSZER FUT: http://localhost:${PORT}`);
