@@ -162,9 +162,8 @@ io.on('connection', (socket) => {
     socket.on('play-sound', (soundType) => {
         io.emit('trigger-sound', soundType);
     });
-});
 
-// Add ezt be az io.on('connection', (socket) => { ... }) blokkba:
+    // Add ezt be az io.on('connection', (socket) => { ... }) blokkba:
 socket.on('admin-start-voting', () => {
     io.emit('enable-voting'); // Szól minden vendégnek, hogy bekapcsolhatja a szavazást
 });
