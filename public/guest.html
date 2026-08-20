@@ -3,128 +3,198 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Party Kívánságműsor</title>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+    <title>NeonLyrics - Vendég Távirányító</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #08080c; color: #fff; padding: 20px; }
-        h1 { font-size: 1.6rem; color: #00ffff; text-align: center; margin-bottom: 5px; }
-        p.sub { text-align: center; color: #888; font-size: 0.85rem; margin-bottom: 25px; }
-        
-        .card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 20px; padding: 20px; margin-bottom: 20px; }
-        input, select { width: 100%; padding: 14px; background: #121218; border: 1px solid #333; border-radius: 10px; color: #fff; font-family: inherit; font-size: 1rem; margin-bottom: 15px; outline: none; }
-        input:focus { border-color: #00ffff; }
-        
-        .btn { width: 100%; background: #00ffff; color: #000; border: none; padding: 15px; font-weight: 800; border-radius: 10px; cursor: pointer; font-size: 1.1rem; }
-        .btn:active { transform: scale(0.98); }
+        :root { --accent: #00ffff; --bg: #050505; }
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); color: #fff; min-height: 100vh; padding: 20px; display: flex; flex-direction: column; align-items: center; }
 
-        .emoji-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; text-align: center; }
-        .emoji-btn { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; font-size: 1.8rem; padding: 15px 0; cursor: pointer; transition: 0.2s; }
-        .emoji-btn:active { background: #00ffff; transform: scale(1.2); }
-        
-        .success-banner { background: rgba(0,255,128,0.2); color: #00ff80; padding: 12px; border-radius: 10px; text-align: center; font-weight: 700; margin-bottom: 15px; display: none; }
+        .container { width: 100%; max-width: 480px; display: flex; flex-direction: column; gap: 20px; padding-bottom: 40px; }
 
-        .vote-panel { position: fixed; bottom: 0; left: 0; width: 100%; background: rgba(15,15,22,0.95); backdrop-filter: blur(20px); border-top: 1px solid rgba(255,255,255,0.1); padding: 20px; border-radius: 25px 25px 0 0; display: none; z-index: 100; text-align: center; box-shadow: 0 -10px 30px rgba(0,0,0,0.8); }
-        .vote-panel.open { display: block; }
-        .vote-btns { display: flex; gap: 15px; margin-top: 15px; }
-        .v-btn { flex: 1; padding: 15px; border-radius: 15px; border: none; font-weight: 800; font-size: 1rem; cursor: pointer; }
+        /* FELSŐ FEJLÉC */
+        .header { text-align: center; padding: 15px 0; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .header h1 { font-size: 1.5rem; font-weight: 800; color: var(--accent); text-transform: uppercase; text-shadow: 0 0 15px var(--accent); letter-spacing: 2px; }
+        .header p { font-size: 0.85rem; color: #aaa; margin-top: 5px; }
+
+        /* KÁRTYA ALAPOK */
+        .card { background: rgba(20, 20, 25, 0.7); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 20px; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .card h3 { font-size: 1.1rem; font-weight: 700; margin-bottom: 12px; color: #fff; display: flex; align-items: center; gap: 8px; }
+
+        /* EMOJI KÜLDŐ PANEL */
+        .emoji-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+        .emoji-btn { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; font-size: 1.8rem; padding: 12px 0; cursor: pointer; transition: 0.2s; }
+        .emoji-btn:active { transform: scale(0.9); background: rgba(0,255,255,0.2); border-color: var(--accent); }
+
+        /* SZAVAZÓ PANEL */
+        .vote-row { display: flex; gap: 15px; }
+        .vote-btn { flex: 1; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; padding: 15px; color: #fff; font-weight: 700; font-size: 1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s; }
+        .vote-btn.good:active { background: rgba(0,255,128,0.2); border-color: #00ff80; color: #00ff80; }
+        .vote-btn.bad:active { background: rgba(255,0,85,0.2); border-color: #ff0055; color: #ff0055; }
+
+        /* DALKERESŐ ÉS KÉRÉSEK */
+        .search-input { width: 100%; padding: 14px 16px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.4); color: #fff; font-family: inherit; font-size: 1rem; outline: none; transition: 0.3s; margin-bottom: 12px; }
+        .search-input:focus { border-color: var(--accent); box-shadow: 0 0 15px rgba(0,255,255,0.2); }
+
+        .song-list { max-height: 250px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
+        .song-list::-webkit-scrollbar { width: 4px; }
+        .song-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 4px; }
+
+        .song-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; background: rgba(255,255,255,0.03); border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); transition: 0.2s; }
+        .song-item:active { background: rgba(0,255,255,0.1); }
+        .song-info { display: flex; flex-direction: column; gap: 25; text-align: left; overflow: hidden; padding-right: 10px; }
+        .song-title { font-weight: 700; font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .song-artist { font-size: 0.8rem; color: #aaa; }
+
+        .request-btn { background: var(--accent); color: #000; border: none; padding: 8px 14px; font-weight: 700; font-size: 0.85rem; border-radius: 8px; cursor: pointer; white-space: nowrap; transition: 0.2s; }
+        .request-btn:active { transform: scale(0.95); opacity: 0.8; }
+
+        /* VISSZAJELZŐ TOAST */
+        #toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(100px); background: rgba(0,255,255,0.2); backdrop-filter: blur(15px); border: 1px solid var(--accent); color: #fff; padding: 12px 25px; border-radius: 30px; font-weight: 700; font-size: 0.9rem; box-shadow: 0 10px 30px rgba(0,255,255,0.3); transition: 0.3s; z-index: 100; pointer-events: none; }
+        #toast.show { transform: translateX(-50%) translateY(0); }
+
+        /* ZS EGYEDI ROMANTIKUS SÁV TELEFONON IS */
+        .zs-badge { background: linear-gradient(135deg, rgba(255,42,133,0.2), rgba(255,0,127,0.05)); border: 1px solid rgba(255,42,133,0.4); border-radius: 16px; padding: 15px; text-align: center; box-shadow: 0 0 20px rgba(255,42,133,0.2); }
+        .zs-badge h4 { color: #ff2a85; font-size: 1.1rem; font-weight: 800; text-shadow: 0 0 10px #ff007f; }
+        .zs-badge p { font-size: 0.8rem; color: #ffb3d9; margin-top: 4px; }
     </style>
 </head>
 <body>
-    <h1>Party Kívánságműsor 🎤</h1>
-    <p class="sub">Küldj be dalokat és reagálj élőben a falra!</p>
 
-    <div id="toast" class="success-banner">Sikeresen beküldve a várólistára!</div>
+    <div class="container">
+        <div class="header">
+            <h1>NeonLyrics Remote</h1>
+            <p>Vezéreld a bulit a zsebedből!</p>
+        </div>
 
-    <div class="card">
-        <h3 style="margin-bottom: 15px; font-size: 1.1rem;">Dal kérése</h3>
-        <input type="text" id="requester-name" placeholder="A neved (pl. Tomi)">
-        <select id="song-select"></select>
-        <button class="btn" onclick="requestSong()">Beküldés a Várólistára</button>
-    </div>
+        <!-- ZS KÜLÖNLEGES KÁRTYA -->
+        <div class="zs-badge">
+            <h4>✨ Zs Hivatalos Távirányító ✨</h4>
+            <p>A szív ritmusa közvetlenül a kivetítőre áramlik 💖</p>
+        </div>
 
-    <div class="card">
-        <h3 style="margin-bottom: 15px; font-size: 1.1rem;">Élő Reakció a Falra 🎉</h3>
-        <div class="emoji-grid">
-            <button class="emoji-btn" onclick="sendEmoji('🔥')">🔥</button>
-            <button class="emoji-btn" onclick="sendEmoji('❤️')">❤️</button>
-            <button class="emoji-btn" onclick="sendEmoji('🍻')">🍻</button>
-            <button class="emoji-btn" onclick="sendEmoji('👏')">👏</button>
-            <button class="emoji-btn" onclick="sendEmoji('💯')">💯</button>
+        <!-- EMOJI KÜLDÉS -->
+        <div class="card">
+            <h3>🔥 Reakció küldése</h3>
+            <div class="emoji-grid">
+                <button class="emoji-btn" onclick="sendEmoji('🔥')">🔥</button>
+                <button class="emoji-btn" onclick="sendEmoji('❤️')">❤️</button>
+                <button class="emoji-btn" onclick="sendEmoji('✨')">✨</button>
+                <button class="emoji-btn" onclick="sendEmoji('🎸')">🎸</button>
+                <button class="emoji-btn" onclick="sendEmoji('🎉')">🎉</button>
+                <button class="emoji-btn" onclick="sendEmoji('💀')">💀</button>
+                <button class="emoji-btn" onclick="sendEmoji('🌹')">🌹</button>
+                <button class="emoji-btn" onclick="sendEmoji('🚀')">🚀</button>
+            </div>
+        </div>
+
+        <!-- SZAVAZÁS -->
+        <div class="card">
+            <h3>📊 Stúdió Szavazás</h3>
+            <div class="vote-row">
+                <button class="vote-btn good" onclick="sendVote('good')">🔥 Zseniális</button>
+                <button class="vote-btn bad" onclick="sendVote('bad')">💀 Gyenge</button>
+            </div>
+        </div>
+
+        <!-- DAL KÉRÉSE / VÁRÓLISTA -->
+        <div class="card">
+            <h3>🎵 Dal Kérése</h3>
+            <input type="text" class="search-input" id="search-box" placeholder="Keresés előadó vagy cím alapján...">
+            <div class="song-list" id="song-list">
+                <!-- Itt betöltődnek a dalok -->
+            </div>
         </div>
     </div>
 
-    <div class="vote-panel" id="mobile-vote-panel">
-        <h3 style="color:#00ffff;">Vége a dalnak! Hogy tetszett?</h3>
-        <div class="vote-btns">
-            <button class="v-btn" style="background:#00ffff; color:#000;" onclick="voteMobile('good')">🔥 Zseniális</button>
-            <button class="v-btn" style="background:#ff0055; color:#fff;" onclick="voteMobile('bad')">💀 Gyenge volt</button>
-        </div>
-        <p id="mobile-vote-timer" style="margin-top: 12px; color: #888; font-size: 0.8rem;"></p>
-    </div>
+    <div id="toast">Művelet sikeres!</div>
 
     <script src="/socket.io/socket.io.js"></script>
     <script>
         const socket = io();
         let allSongs = [];
-        let mobileVoteTimeout = null;
 
+        // Értesítés (Toast) megjelenítése
+        function showToast(text) {
+            const t = document.getElementById('toast');
+            t.textContent = text;
+            t.classList.add('show');
+            setTimeout(() => t.classList.remove('show'), 3000);
+        }
+
+        // Emoji küldés
+        function sendEmoji(emoji) {
+            socket.emit('send-emoji', emoji);
+            showToast(`${emoji} Reakció elküldve!`);
+        }
+
+        // Szavazás küldés
+        function sendVote(type) {
+            socket.emit('send-vote', type);
+            showToast(type === 'good' ? '🔥 Szavazat: Zseniális!' : '💀 Szavazat: Gyenge!');
+        }
+
+        // Dalok betöltése a szerverről
         async function loadSongs() {
             try {
                 const res = await fetch('/api/songs');
                 allSongs = await res.json();
-                const select = document.getElementById('song-select');
-                select.innerHTML = '';
-                allSongs.forEach(s => {
-                    const opt = document.createElement('option');
-                    opt.value = s.id;
-                    opt.textContent = `${s.artist} - ${s.title}`;
-                    select.appendChild(opt);
-                });
-            } catch(e) { console.error(e); }
-        }
-
-        function requestSong() {
-            const id = document.getElementById('song-select').value;
-            const name = document.getElementById('requester-name').value.trim() || 'Vendég';
-            const song = allSongs.find(s => s.id === id);
-            if(song) {
-                socket.emit('request-song', { ...song, requester: name });
-                const t = document.getElementById('toast');
-                t.style.display = 'block';
-                setTimeout(() => t.style.display = 'none', 3000);
+                renderSongList(allSongs);
+            } catch (e) {
+                console.error("Hiba a dalok lekérésekor:", e);
             }
         }
 
-        function sendEmoji(emoji) {
-            socket.emit('send-emoji', emoji);
+        // Dalok megjelenítése a listában
+        function renderSongList(songs) {
+            const listContainer = document.getElementById('song-list');
+            listContainer.innerHTML = '';
+
+            if (songs.length === 0) {
+                listContainer.innerHTML = '<div style="text-align:center; color:#777; padding:15px;">Nincs találat.</div>';
+                return;
+            }
+
+            songs.forEach(song => {
+                const item = document.createElement('div');
+                item.className = 'song-item';
+                item.innerHTML = `
+                    <div class="song-info">
+                        <div class="song-title">${song.title}</div>
+                        <div class="song-artist">${song.artist}</div>
+                    </div>
+                    <button class="request-btn" onclick="requestSong('${song.id}')">+ Kérés</button>
+                `;
+                listContainer.appendChild(item);
+            });
         }
 
-        socket.on('show-final-results', () => {
-            const panel = document.getElementById('mobile-vote-panel');
-            panel.classList.add('open');
-            
-            let timeLeft = 30;
-            clearInterval(mobileVoteTimeout);
-            
-            mobileVoteTimeout = setInterval(() => {
-                document.getElementById('mobile-vote-timer').textContent = `Eltűnik: ${timeLeft} mp múlva`;
-                
-                if (timeLeft <= 0) {
-                    clearInterval(mobileVoteTimeout);
-                    panel.classList.remove('open');
-                }
-                timeLeft--;
-            }, 1000);
+        // Dal kérése közvetlenül
+        function requestSong(songId) {
+            const song = allSongs.find(s => s.id === songId);
+            if (song) {
+                const requesterName = prompt("Add meg a neved (vagy hagyhatod üresen):", "Vendég") || "Vendég";
+                socket.emit('request-song', {
+                    title: song.title,
+                    artist: song.artist,
+                    youtubeId: song.youtubeId,
+                    requester: requesterName
+                });
+                showToast(`Dal beküldve: ${song.title}`);
+            }
+        }
+
+        // Keresőmező eseménykezelője
+        document.getElementById('search-box').addEventListener('input', (e) => {
+            const term = e.target.value.toLowerCase();
+            const filtered = allSongs.filter(s => 
+                s.title.toLowerCase().includes(term) || 
+                s.artist.toLowerCase().includes(term)
+            );
+            renderSongList(filtered);
         });
 
-        function voteMobile(type) {
-            socket.emit('send-vote', type);
-            clearInterval(mobileVoteTimeout);
-            document.getElementById('mobile-vote-panel').classList.remove('open');
-            alert('Köszönjük a szavazatot!');
-        }
-
+        // Indításkor lekérjük a dalokat
         loadSongs();
     </script>
 </body>
