@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NeonLyrics - Vendég Távirányító</title>
+    <title>RetroParty - Vendég Távirányító</title>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root { --accent: #00ffff; --bg: #050505; }
@@ -21,6 +21,12 @@
         .card { background: rgba(20, 20, 25, 0.7); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 20px; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
         .card h3 { font-size: 1.1rem; font-weight: 700; margin-bottom: 12px; color: #fff; display: flex; align-items: center; gap: 8px; }
 
+        /* 1. ÉLŐ MOST SZÓL KÁRTYA */
+        .now-playing-box { background: linear-gradient(135deg, rgba(0,255,255,0.1), rgba(0,0,0,0.4)); border: 1px solid rgba(0,255,255,0.3); border-radius: 16px; padding: 15px; text-align: center; box-shadow: 0 0 20px rgba(0,255,255,0.15); }
+        .np-label { font-size: 0.75rem; color: var(--accent); text-transform: uppercase; letter-spacing: 2px; font-weight: 700; }
+        .np-title { font-size: 1.1rem; font-weight: 800; margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .np-artist { font-size: 0.85rem; color: #aaa; margin-top: 2px; }
+
         /* EMOJI KÜLDŐ PANEL */
         .emoji-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
         .emoji-btn { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; font-size: 1.8rem; padding: 12px 0; cursor: pointer; transition: 0.2s; }
@@ -32,11 +38,22 @@
         .vote-btn.good:active { background: rgba(0,255,128,0.2); border-color: #00ff80; color: #00ff80; }
         .vote-btn.bad:active { background: rgba(255,0,85,0.2); border-color: #ff0055; color: #ff0055; }
 
+        /* 3. ÜZENETFAL MEZŐ */
+        .message-box { display: flex; gap: 10px; }
+        .msg-input { flex-grow: 1; padding: 12px 14px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.4); color: #fff; font-family: inherit; font-size: 0.95rem; outline: none; }
+        .msg-input:focus { border-color: var(--accent); }
+        .send-msg-btn { background: var(--accent); color: #000; border: none; padding: 0 16px; font-weight: 700; border-radius: 12px; cursor: pointer; }
+
+        /* 4. SOUNDBOARD (HANGEFFEKTEK) */
+        .sound-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+        .sound-btn { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 12px 5px; color: #fff; font-weight: 600; font-size: 0.85rem; cursor: pointer; transition: 0.2s; text-align: center; }
+        .sound-btn:active { background: rgba(255,255,0,0.2); border-color: #ffff00; transform: scale(0.95); }
+
         /* DALKERESŐ ÉS KÉRÉSEK */
         .search-input { width: 100%; padding: 14px 16px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.4); color: #fff; font-family: inherit; font-size: 1rem; outline: none; transition: 0.3s; margin-bottom: 12px; }
         .search-input:focus { border-color: var(--accent); box-shadow: 0 0 15px rgba(0,255,255,0.2); }
 
-        .song-list { max-height: 250px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
+        .song-list { max-height: 220px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
         .song-list::-webkit-scrollbar { width: 4px; }
         .song-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 4px; }
 
@@ -62,6 +79,13 @@
             <p>Vezéreld a bulit a zsebedből!</p>
         </div>
 
+        <!-- 1. ÉLŐ MOST SZÓL KÁRTYA -->
+        <div class="now-playing-box">
+            <div class="np-label">⚡ Most szól a buliban ⚡</div>
+            <div class="np-title" id="np-title">Betöltés...</div>
+            <div class="np-artist" id="np-artist">Várj egy pillanatot</div>
+        </div>
+
         <!-- EMOJI KÜLDÉS -->
         <div class="card">
             <h3>🔥 Reakció küldése</h3>
@@ -83,6 +107,25 @@
             <div class="vote-row">
                 <button class="vote-btn good" onclick="sendVote('good')">🔥 Zseniális</button>
                 <button class="vote-btn bad" onclick="sendVote('bad')">💀 Gyenge</button>
+            </div>
+        </div>
+
+        <!-- 3. ÉLŐ ÜZENETFAL / KÖSZÖNTŐ -->
+        <div class="card">
+            <h3>💬 Üzenet a kivetítőre</h3>
+            <div class="message-box">
+                <input type="text" class="msg-input" id="msg-input" placeholder="Írj be egy poént vagy üzenetet..." maxlength="60">
+                <button class="send-msg-btn" onclick="sendMessage()">Küldés</button>
+            </div>
+        </div>
+
+        <!-- 4. SOUNDBOARD (HANGEFFEKTEK) -->
+        <div class="card">
+            <h3>🎛️ Bulis Hangeffektek</h3>
+            <div class="sound-grid">
+                <button class="sound-btn" onclick="playSound('airhorn')">📯 Légkürt</button>
+                <button class="sound-btn" onclick="playSound('cheer')">👏 Taps</button>
+                <button class="sound-btn" onclick="playSound('vinyl')">🪩 Lemez</button>
             </div>
         </div>
 
@@ -110,6 +153,18 @@
             setTimeout(() => t.classList.remove('show'), 3000);
         }
 
+        // 1. Frissítjük a Most szól kártyát lekérdezéssel
+        async function updateNowPlaying() {
+            try {
+                const res = await fetch('/api/current-song');
+                const song = await res.json();
+                document.getElementById('np-title').textContent = song.title || 'Ismeretlen';
+                document.getElementById('np-artist').textContent = song.artist || 'Ismeretlen előadó';
+            } catch(e) {}
+        }
+        setInterval(updateNowPlaying, 3000);
+        updateNowPlaying();
+
         function sendEmoji(emoji) {
             socket.emit('send-emoji', emoji);
             showToast(`${emoji} Reakció elküldve!`);
@@ -120,14 +175,28 @@
             showToast(type === 'good' ? '🔥 Szavazat: Zseniális!' : '💀 Szavazat: Gyenge!');
         }
 
+        // 3. Üzenet küldése a kivetítőre
+        function sendMessage() {
+            const input = document.getElementById('msg-input');
+            const text = input.value.trim();
+            if(!text) return;
+            socket.emit('send-message', text);
+            input.value = '';
+            showToast('💬 Üzenet elküldve a kivetítőre!');
+        }
+
+        // 4. Hangeffekt triggerezés
+        function playSound(soundType) {
+            socket.emit('play-sound', soundType);
+            showToast('🎛️ Effektszűrő lejátszva!');
+        }
+
         async function loadSongs() {
             try {
                 const res = await fetch('/api/songs');
                 allSongs = await res.json();
                 renderSongList(allSongs);
-            } catch (e) {
-                console.error("Hiba a dalok lekérésekor:", e);
-            }
+            } catch (e) {}
         }
 
         function renderSongList(songs) {
