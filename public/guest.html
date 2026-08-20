@@ -42,7 +42,7 @@
 
         .song-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; background: rgba(255,255,255,0.03); border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); transition: 0.2s; }
         .song-item:active { background: rgba(0,255,255,0.1); }
-        .song-info { display: flex; flex-direction: column; gap: 25; text-align: left; overflow: hidden; padding-right: 10px; }
+        .song-info { display: flex; flex-direction: column; gap: 4px; text-align: left; overflow: hidden; padding-right: 10px; }
         .song-title { font-weight: 700; font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .song-artist { font-size: 0.8rem; color: #aaa; }
 
@@ -52,25 +52,14 @@
         /* VISSZAJELZŐ TOAST */
         #toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(100px); background: rgba(0,255,255,0.2); backdrop-filter: blur(15px); border: 1px solid var(--accent); color: #fff; padding: 12px 25px; border-radius: 30px; font-weight: 700; font-size: 0.9rem; box-shadow: 0 10px 30px rgba(0,255,255,0.3); transition: 0.3s; z-index: 100; pointer-events: none; }
         #toast.show { transform: translateX(-50%) translateY(0); }
-
-        /* ZS EGYEDI ROMANTIKUS SÁV TELEFONON IS */
-        .zs-badge { background: linear-gradient(135deg, rgba(255,42,133,0.2), rgba(255,0,127,0.05)); border: 1px solid rgba(255,42,133,0.4); border-radius: 16px; padding: 15px; text-align: center; box-shadow: 0 0 20px rgba(255,42,133,0.2); }
-        .zs-badge h4 { color: #ff2a85; font-size: 1.1rem; font-weight: 800; text-shadow: 0 0 10px #ff007f; }
-        .zs-badge p { font-size: 0.8rem; color: #ffb3d9; margin-top: 4px; }
     </style>
 </head>
 <body>
 
     <div class="container">
         <div class="header">
-            <h1>NeonLyrics Remote</h1>
+            <h1>RetroParty Remote</h1>
             <p>Vezéreld a bulit a zsebedből!</p>
-        </div>
-
-        <!-- ZS KÜLÖNLEGES KÁRTYA -->
-        <div class="zs-badge">
-            <h4>✨ Zs Hivatalos Távirányító ✨</h4>
-            <p>A szív ritmusa közvetlenül a kivetítőre áramlik 💖</p>
         </div>
 
         <!-- EMOJI KÜLDÉS -->
@@ -90,7 +79,7 @@
 
         <!-- SZAVAZÁS -->
         <div class="card">
-            <h3>📊 Stúdió Szavazás</h3>
+            <h3>📊 Party Szavazás</h3>
             <div class="vote-row">
                 <button class="vote-btn good" onclick="sendVote('good')">🔥 Zseniális</button>
                 <button class="vote-btn bad" onclick="sendVote('bad')">💀 Gyenge</button>
@@ -114,7 +103,6 @@
         const socket = io();
         let allSongs = [];
 
-        // Értesítés (Toast) megjelenítése
         function showToast(text) {
             const t = document.getElementById('toast');
             t.textContent = text;
@@ -122,19 +110,16 @@
             setTimeout(() => t.classList.remove('show'), 3000);
         }
 
-        // Emoji küldés
         function sendEmoji(emoji) {
             socket.emit('send-emoji', emoji);
             showToast(`${emoji} Reakció elküldve!`);
         }
 
-        // Szavazás küldés
         function sendVote(type) {
             socket.emit('send-vote', type);
             showToast(type === 'good' ? '🔥 Szavazat: Zseniális!' : '💀 Szavazat: Gyenge!');
         }
 
-        // Dalok betöltése a szerverről
         async function loadSongs() {
             try {
                 const res = await fetch('/api/songs');
@@ -145,7 +130,6 @@
             }
         }
 
-        // Dalok megjelenítése a listában
         function renderSongList(songs) {
             const listContainer = document.getElementById('song-list');
             listContainer.innerHTML = '';
@@ -169,7 +153,6 @@
             });
         }
 
-        // Dal kérése közvetlenül
         function requestSong(songId) {
             const song = allSongs.find(s => s.id === songId);
             if (song) {
@@ -184,7 +167,6 @@
             }
         }
 
-        // Keresőmező eseménykezelője
         document.getElementById('search-box').addEventListener('input', (e) => {
             const term = e.target.value.toLowerCase();
             const filtered = allSongs.filter(s => 
@@ -194,7 +176,6 @@
             renderSongList(filtered);
         });
 
-        // Indításkor lekérjük a dalokat
         loadSongs();
     </script>
 </body>
