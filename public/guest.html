@@ -64,6 +64,7 @@
 
         #toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(100px); background: rgba(0,255,255,0.2); backdrop-filter: blur(15px); border: 1px solid var(--accent); color: #fff; padding: 12px 25px; border-radius: 30px; font-weight: 700; font-size: 0.9rem; box-shadow: 0 10px 30px rgba(0,255,255,0.3); transition: 0.3s; z-index: 100; pointer-events: none; }
         #toast.show { transform: translateX(-50%) translateY(0); }
+        #voting-card { display: none; } /* Alapból rejtve van */
     </style>
 </head>
 <body>
@@ -96,20 +97,13 @@
             </div>
         </div>
 
-        <!-- SZAVAZÁS -->
-        <div class="card">
-            <h3>📊 Party Szavazás</h3>
-            <div class="vote-row">
-                <button class="vote-btn good" onclick="sendVote('good')">🔥 Zseniális</button>
-                <button class="vote-btn bad" onclick="sendVote('bad')">💀 Gyenge</button>
-            </div>
-        </div>
-
-        <!-- ÚJ: FÉNYPARTY / VAKU JELZÉS -->
-        <div class="card">
-            <h3>📸 Vakuzás / Fényparty</h3>
-            <button class="flash-btn" onclick="triggerFlash()">✨ Vakuzás Kérése</button>
-        </div>
+<div class="card" id="voting-card">
+    <h3>📊 Party Szavazás</h3>
+    <div class="vote-row">
+        <button class="vote-btn good" onclick="sendVote('good')">🔥 Zseniális</button>
+        <button class="vote-btn bad" onclick="sendVote('bad')">💀 Gyenge</button>
+    </div>
+</div>
 
         <!-- SOUNDBOARD (HANGEFFEKTEK) -->
         <div class="card">
@@ -202,6 +196,20 @@
                 listContainer.appendChild(item);
             });
         }
+
+        // Figyeljük, amikor az admin elindítja a szavazást
+socket.on('enable-voting', () => {
+    const vCard = document.getElementById('voting-card');
+    vCard.style.display = 'block'; // Megjelenik a telefonokon
+    showToast('📊 A szavazás elindult! Szavazz te is!');
+});
+
+function sendVote(type) {
+    socket.emit('send-vote', type);
+    showToast(type === 'good' ? '🔥 Szavazat elküldve!' : '💀 Szavazat elküldve!');
+    // Opcionális: szavazás után elrejthetjük újra, hogy ne szavazhasson 1 ember 5x
+    document.getElementById('voting-card').style.display = 'none';
+}
 
         function requestSong(songId) {
             const song = allSongs.find(s => s.id === songId);
